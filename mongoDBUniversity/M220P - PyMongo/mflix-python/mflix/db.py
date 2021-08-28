@@ -178,6 +178,7 @@ def build_query_sort_project(filters):
     sort = [("tomatoes.viewer.numReviews", DESCENDING), ("_id", ASCENDING)]
     project = None
     if filters:
+        #print(filters)
         if "text" in filters:
             query = {"$text": {"$search": filters["text"]}}
             meta_score = {"$meta": "textScore"}
@@ -186,7 +187,6 @@ def build_query_sort_project(filters):
         elif "cast" in filters:
             query = {"cast": {"$in": filters["cast"]}}
         elif "genres" in filters:
-
             """
             Ticket: Text and Subfield Search
 
@@ -196,7 +196,7 @@ def build_query_sort_project(filters):
 
             # TODO: Text and Subfield Search
             # Construct a query that will search for the chosen genre.
-            query = {}
+            query = {"genres":{"$in":filters["genres"]}}
 
     return query, sort, project
 
@@ -214,6 +214,7 @@ def get_movies(filters, page, movies_per_page):
 
     Returns 2 elements in a tuple: (movies, total_num_movies)
     """
+    #print(filters, page, movies_per_page)
     query, sort, project = build_query_sort_project(filters)
     if project:
         cursor = db.movies.find(query, project).sort(sort)
@@ -223,6 +224,7 @@ def get_movies(filters, page, movies_per_page):
     total_num_movies = 0
     if page == 0:
         total_num_movies = db.movies.count_documents(query)
+    movies = cursor.skip(movies_per_page*page).limit(movies_per_page)
     """
     Ticket: Paging
 
@@ -236,7 +238,6 @@ def get_movies(filters, page, movies_per_page):
 
     # TODO: Paging
     # Use the cursor to only return the movies that belong on the current page.
-    movies = cursor.limit(movies_per_page)
 
     return (list(movies), total_num_movies)
 
